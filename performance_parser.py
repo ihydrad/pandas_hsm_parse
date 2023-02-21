@@ -16,6 +16,7 @@ def get_data_from_file(file_path: str, mark: str = None) -> pd.DataFrame:
     df=pd.read_csv(file_path)
 
     try:
+        params = df.iloc[0, ].index.values[0]
         df.drop(df.columns[0], axis=1, inplace=True)  # drop head: Elliptic curve: GOST R 34.10-2001 CryptoPro A (256 bits)
         df.reset_index(inplace=True)
         df.columns = df.iloc[0]  #  head names = row[0]
@@ -25,6 +26,8 @@ def get_data_from_file(file_path: str, mark: str = None) -> pd.DataFrame:
             df["type"] = mark
     except:
         print("Error parse: ", file_path)
+    
+    df = df.assign(params=params)
 
     return df
 
@@ -40,7 +43,6 @@ def get_data_from_files(files: list, mark: str = None) -> pd.DataFrame:
 
 def prepare(df: pd.DataFrame) -> pd.DataFrame:
     import numpy as np
-    print("prepare")
     df.dropna(axis=1, how='all', inplace=True)
     df.drop(["time_unit", ], axis=1, inplace=True)
     df["threads"] = df["name"].astype("str").str.split("/").str[-1].str.split("threads:").str[-1]
@@ -60,7 +62,7 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     df["cpu_time"] = df["cpu_time"].astype("float").round(0).astype("int32")
     df["real_time"] = df["real_time"].astype("float").round(0).astype("int32")
     
-    df = df[["type", "group", "func",  "block_size", "iterations", "threads", "session", "cpu_time", "real_time", "items_per_second", "bytes_per_second"]]
+    df = df[["type", "params", "group", "func",  "block_size", "iterations", "threads", "session", "cpu_time", "real_time", "items_per_second", "bytes_per_second"]]
     
     return df
 
