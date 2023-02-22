@@ -53,14 +53,14 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     df.loc[df["func"].astype("str").str.contains("session|Block size|threads", regex=True), ["func", ]] = np.nan
     df.loc[df["func"].isnull(), ["func", ]] = df[df["func"].isnull()]["group"]
     
-    df["iterations"]=df["iterations"].astype("int32")
-    df["threads"]=df["threads"].astype("int32")
-    df["session"] = df[~df["session"].isnull()]["session"].astype("int32")
-    df["bytes_per_second"] = df[~df["bytes_per_second"].isnull()]["bytes_per_second"].astype("float").round(0).astype("int32")
-    df["items_per_second"] = df[~df["items_per_second"].isnull()]["items_per_second"].astype("float").round(0).astype("int32")
-    df["block_size"] = df[~df["block_size"].isnull()]["block_size"].astype("float").round(0).astype("int32")
-    df["cpu_time"] = df["cpu_time"].astype("float").round(0).astype("int32")
-    df["real_time"] = df["real_time"].astype("float").round(0).astype("int32")
+    df["iterations"]=df["iterations"].astype(np.uint64)
+    df["threads"]=df["threads"].astype(np.uint64)
+    df["session"] = df[~df["session"].isnull()]["session"].astype(np.uint64)
+    df["bytes_per_second"] = df[~df["bytes_per_second"].isnull()]["bytes_per_second"].astype("float").round(0).astype(np.uint64)
+    df["items_per_second"] = df[~df["items_per_second"].isnull()]["items_per_second"].astype("float").round(0).astype(np.uint64)
+    df["block_size"] = df[~df["block_size"].isnull()]["block_size"].astype("float").round(0).astype(np.uint64)
+    df["cpu_time"] = df["cpu_time"].astype("float").round(0).astype(np.uint64)
+    df["real_time"] = df["real_time"].astype("float").round(0).astype(np.uint64)
     
     df = df[["type", "params", "group", "func",  "block_size", "iterations", "threads", "session", "cpu_time", "real_time", "items_per_second", "bytes_per_second"]]
     
