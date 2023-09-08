@@ -69,15 +69,13 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Parser hsm csv data (performance)')
+    parser = argparse.ArgumentParser()
     parser.add_argument('--fips', type=str, help='Folder results for fips')
     parser.add_argument('--gost', type=str, help='Folder results for gost')
 
     args = parser.parse_args()
 
     df = pd.DataFrame()
-    fips_files = []
-    gost_files = []
 
     if args.gost:
         gost_files = gazer_files(args.gost)
