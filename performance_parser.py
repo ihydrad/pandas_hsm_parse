@@ -2,6 +2,7 @@ import argparse
 import os
 import pandas as pd
 
+from pathlib import Path
 from typing import Optional
 
 
@@ -15,7 +16,17 @@ def gazer_files(csv_path: Optional[str] = None) -> list:
 
 def get_data_from_file(file_path: str,
                        mark: Optional[str] = None) -> pd.DataFrame:
-    df = pd.read_csv(file_path, header=1)
+    str_data = Path(file_path).read_text()
+    header_row_position = None
+    for cnt, line in enumerate(str_data.split("\n")):
+        if line.startswith("name"):
+            header_row_position = cnt
+            break
+
+    if header_row_position is None:
+        raise Exception("header_row_position not found!")
+
+    df = pd.read_csv(file_path, header=header_row_position-1)
 
     try:
         params = df.iloc[0, ].index.values[0]
@@ -43,7 +54,7 @@ def get_data_from_files(files: list, mark: str = None) -> pd.DataFrame:
 
 def prepare(df: pd.DataFrame) -> pd.DataFrame:
     import numpy as np
-    df.dropna(axis=1, how='all', inplace=True)
+    # df.dropna(axis=1, how='all', inplace=True)
     df.drop(["time_unit", ], axis=1, inplace=True)
     df["threads"] = df["name"].astype("str").str.split("/").str[-1].str.split("threads:").str[-1]
     df["block_size"] = df[df["name"].astype("str").str.contains("Block size:")]["name"].astype("str").str.split("Block size:").str[-1].str.split("/").str[0]
