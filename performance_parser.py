@@ -15,11 +15,12 @@ def gazer_files(csv_path: Optional[str] = None) -> list:
 
 def get_data_from_file(file_path: str,
                        mark: Optional[str] = None) -> pd.DataFrame:
-    df = pd.read_csv(file_path)
+    df = pd.read_csv(file_path, header=1)
+
     try:
         params = df.iloc[0, ].index.values[0]
         # drop head: Elliptic curve: GOST R 34.10-2001 CryptoPro A (256 bits)
-        df.drop(df.columns[0], axis=1, inplace=True)
+        # df.drop(df.columns[0], axis=1, inplace=True)
         df.reset_index(inplace=True)
         df.columns = df.iloc[0]  # head names = row[0]
         df.drop([0, ], axis=0, inplace=True)  # drop row[0]
