@@ -1,6 +1,7 @@
 import argparse
 import os
 import pandas as pd
+import numpy as np
 
 from pathlib import Path
 from typing import Optional
@@ -30,11 +31,9 @@ def get_data_from_file(file_path: str,
 
     try:
         params = df.iloc[0, ].index.values[0]
-        # drop head: Elliptic curve: GOST R 34.10-2001 CryptoPro A (256 bits)
-        # df.drop(df.columns[0], axis=1, inplace=True)
         df.reset_index(inplace=True)
-        df.columns = df.iloc[0]  # head names = row[0]
-        df.drop([0, ], axis=0, inplace=True)  # drop row[0]
+        df.columns = df.iloc[0]
+        df.drop([0, ], axis=0, inplace=True)
         df["file"] = file_path
         if mark:
             df["type"] = mark
@@ -47,14 +46,12 @@ def get_data_from_file(file_path: str,
 def get_data_from_files(files: list, mark: str = None) -> pd.DataFrame:
     all_data = pd.DataFrame()
     for file in files:
-        all_data = all_data.append(get_data_from_file(file, mark),
-                                   ignore_index=True)
+        all_data = pd.concat([all_data, get_data_from_file(file, mark)],
+                             ignore_index=True)
     return all_data
 
 
 def prepare(df: pd.DataFrame) -> pd.DataFrame:
-    import numpy as np
-    # df.dropna(axis=1, how='all', inplace=True)
     df.drop(["time_unit", ], axis=1, inplace=True)
     df["threads"] = df["name"].astype("str").str.split("/").str[-1].str.split("threads:").str[-1]
     df["block_size"] = df[df["name"].astype("str").str.contains("Block size:")]["name"].astype("str").str.split("Block size:").str[-1].str.split("/").str[0]
@@ -64,8 +61,8 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     df.loc[df["func"].astype("str").str.contains("session|Block size|threads", regex=True), ["func", ]] = np.nan
     df.loc[df["func"].isnull(), ["func", ]] = df[df["func"].isnull()]["group"]
 
-    df["iterations"]=df["iterations"].astype(np.uint64)
-    df["threads"]=df["threads"].astype(np.uint64)
+    df["iterations"] = df["iterations"].astype(np.uint64)
+    df["threads"] = df["threads"].astype(np.uint64)
     df["session"] = df[~df["session"].isnull()]["session"].astype(np.uint64)
     df["bytes_per_second"] = df[~df["bytes_per_second"].isnull()]["bytes_per_second"].astype("float").round(0).astype(np.uint64)
     df["items_per_second"] = df[~df["items_per_second"].isnull()]["items_per_second"].astype("float").round(0).astype(np.uint64)
@@ -73,11 +70,11 @@ def prepare(df: pd.DataFrame) -> pd.DataFrame:
     df["cpu_time"] = df["cpu_time"].astype("float").round(0).astype(np.uint64)
     df["real_time"] = df["real_time"].astype("float").round(0).astype(np.uint64)
 
-    df = df[["type", "params", "group", "func",  "block_size", "iterations",
+    order = ["type", "params", "group", "func",  "block_size", "iterations",
              "threads", "session", "cpu_time", "real_time", "items_per_second",
-             "bytes_per_second"]]
+             "bytes_per_second"]
 
-    return df
+    return df[order]
 
 
 if __name__ == "__main__":
@@ -92,12 +89,12 @@ if __name__ == "__main__":
     if args.gost:
         gost_files = gazer_files(args.gost)
         df_gost = get_data_from_files(gost_files, "GOST")
-        df = df.append(df_gost, ignore_index=True)
+        df = pd.concat([df, df_gost], ignore_index=True)
 
     if args.fips:
         fips_files = gazer_files(args.fips)
         df_fips = get_data_from_files(fips_files, "FIPS")
-        df = df.append(df_fips, ignore_index=True)
+        df = pd.concat([df, df_fips], ignore_index=True)
 
     if not df.empty:
         df = prepare(df)
